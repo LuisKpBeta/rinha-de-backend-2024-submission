@@ -6,6 +6,8 @@ public class Transacao
   public required string Descricao { get; set; }
   public required string Tipo { get; set; }
 
+  public DateTime RealizadaEm { get; set; }
+
   public bool IsValid()
   {
     var valueOk = Valor >= 0;
@@ -34,7 +36,6 @@ public class Transacao
   }
 
 }
-
 
 public class Cliente
 {

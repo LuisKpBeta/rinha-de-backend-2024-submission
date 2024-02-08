@@ -8,10 +8,16 @@ builder.Services.AddScoped<Database>();
 
 var app = builder.Build();
 
-app.MapGet("/clientes/{id}/extrato", (int id) =>
+app.MapGet("/clientes/{id}/extrato", async (Database db, int id) =>
 {
-  var message = $"Hello World! {id}";
-  return message;
+  await db.Connect();
+  var estatements = await db.GetEstatement(id);
+  if (estatements == null)
+  {
+    await db.EndConn();
+    return Results.NotFound();
+  }
+  return Results.Ok(estatements);
 });
 
 app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, Transacao newTransaction) =>

@@ -56,6 +56,43 @@ public class Database
     return rowsAffected > 0;
   }
 
+  public async Task<Estatement?> GetEstatement(int clientId)
+  {
+    var client = GetClientById(clientId);
+    if (client == null)
+    {
+      return null;
+    }
+    List<ReadTransactions> transactions = new List<ReadTransactions>();
+
+    string query = "SELECT value, description, type, operation_date FROM transactions WHERE customer_id = @id ORDER BY operation_date DESC LIMIT 10";
+
+    using var command = new NpgsqlCommand(query, _conn);
+    command.Parameters.AddWithValue("@id", clientId);
+    using var reader = await command.ExecuteReaderAsync();
+    while (reader.Read())
+    {
+      int value = reader.GetInt32(0);
+      string description = reader.GetString(1);
+      string type = reader.GetString(2);
+      DateTime date = reader.GetDateTime(3);
+
+      transactions.Add(new ReadTransactions { Descricao = description, Tipo = type, Valor = value, RealizadaEm = date });
+    }
+
+
+    var saldo = new ClientBalance
+    {
+      Limite = client.Limite,
+      Total = client.Saldo,
+    };
+    var estatements = new Estatement
+    {
+      Saldo = saldo,
+      UltimasTransacoes = transactions
+    };
+    return estatements;
+  }
   public bool InsertTransaction(Transacao newTransaction)
   {
     string query = "INSERT INTO transactions (value, description, type, customer_id, operation_date) VALUES (@value, @description,@type, @customer_id, @date)";
