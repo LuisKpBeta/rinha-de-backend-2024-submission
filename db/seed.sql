@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   description varchar(11) NOT NULL, 
   type varchar(1) NOT NULL,
   customer_id int NOT NULL,
+  operation_date timestamptz NOT NULL, 
   FOREIGN KEY (customer_id) REFERENCES customers (id)
 );
 
