@@ -29,7 +29,7 @@ app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, Transacao n
 {
   if (!newTransaction.IsValid())
   {
-    return Results.BadRequest();
+    return Results.UnprocessableEntity();
   }
   await db.Connect();
 
