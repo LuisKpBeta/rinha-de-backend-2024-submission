@@ -2,7 +2,12 @@ using Npgsql;
 using NpgsqlTypes;
 
 var builder = WebApplication.CreateBuilder(args);
-string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=rinhadb;";
+string dbHost = Environment.GetEnvironmentVariable("DATABASE_HOST")!;
+if (dbHost == null)
+{
+  dbHost = "localhost";
+}
+string connectionString = $"Host={dbHost};Port=5432;Username=postgres;Password=postgres;Database=rinhadb;";
 builder.Services.AddNpgsqlDataSource(connectionString);
 builder.Services.AddScoped<Database>();
 
