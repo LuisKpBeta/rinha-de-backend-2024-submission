@@ -7,7 +7,6 @@ public class Database
 
   public Database(string connectionString)
   {
-    Console.WriteLine(connectionString);
     _conn = new NpgsqlConnection(connectionString);
     _conn.Open();
   }

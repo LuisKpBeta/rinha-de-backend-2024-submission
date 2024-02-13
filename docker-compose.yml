@@ -40,7 +40,7 @@ services:
     image: rinha-api-2024:latest
     hostname: api01
     environment:
-      - DATABASE_HOST="db"
+      - DATABASE_HOST=db
     ports:
       - "8081:8080"
     expose:
@@ -66,5 +66,4 @@ volumes:
 
 networks:
   default:
-    driver: bridge
-    name: rinha
+    driver: host
