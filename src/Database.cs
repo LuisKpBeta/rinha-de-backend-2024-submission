@@ -5,18 +5,16 @@ public class Database
 {
   private NpgsqlConnection _conn;
 
-  public Database(NpgsqlConnection conn)
+  public Database(string connectionString)
   {
-    _conn = conn;
+    Console.WriteLine(connectionString);
+    _conn = new NpgsqlConnection(connectionString);
+    _conn.Open();
   }
 
   public async Task Connect()
   {
     await _conn.OpenAsync();
-  }
-  public async Task EndConn()
-  {
-    await _conn.CloseAsync();
   }
   public async Task<bool> ClientExists(int id)
   {
@@ -111,9 +109,9 @@ public class Database
   public async Task<TransactionResult> ProcessTransaction(int clientId, Transacao newTransaction)
   {
     await Task.CompletedTask;
-    var command = new NpgsqlCommand("select pg_advisory_lock(@id)", _conn);
-    command.Parameters.AddWithValue("@id", clientId);
-    await command.ExecuteScalarAsync();
+    // var command = new NpgsqlCommand("select pg_advisory_lock(@id)", _conn);
+    // command.Parameters.AddWithValue("@id", clientId);
+    // await command.ExecuteScalarAsync();
     var newT = new TransactionResult();
     var client = GetClientById(clientId)!;
 
@@ -127,9 +125,9 @@ public class Database
     newTransaction.DoOperation();
     UpdateClient(newTransaction.Client);
 
-    command = new NpgsqlCommand("select pg_advisory_unlock(@id)", _conn);
-    command.Parameters.AddWithValue("@id", clientId);
-    await command.ExecuteScalarAsync();
+    // command = new NpgsqlCommand("select pg_advisory_unlock(@id)", _conn);
+    // command.Parameters.AddWithValue("@id", clientId);
+    // await command.ExecuteScalarAsync();
 
     InsertTransaction(newTransaction);
     newT.Limite = newTransaction.Client.Limite;

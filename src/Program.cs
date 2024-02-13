@@ -7,19 +7,18 @@ if (dbHost == null)
 {
   dbHost = "localhost";
 }
-string connectionString = $"Host={dbHost};Port=5432;Username=postgres;Password=postgres;Database=rinhadb;";
+
+string connectionString = $"Host=db;Port=5432;Username=postgres;Password=postgres;Database=rinhadb;Command Timeout=1";
 builder.Services.AddNpgsqlDataSource(connectionString);
-builder.Services.AddScoped<Database>();
+builder.Services.AddSingleton<Database>(new Database(connectionString));
 
 var app = builder.Build();
 
 app.MapGet("/clientes/{id}/extrato", async (Database db, int id) =>
 {
-  await db.Connect();
   var estatements = await db.GetEstatement(id);
   if (estatements == null)
   {
-    await db.EndConn();
     return Results.NotFound();
   }
   return Results.Ok(estatements);
@@ -31,16 +30,13 @@ app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, Transacao n
   {
     return Results.UnprocessableEntity();
   }
-  await db.Connect();
 
   var exists = await db.ClientExists(id);
   if (!exists)
   {
-    await db.EndConn();
     return Results.NotFound();
   }
   var operationResult = await db.ProcessTransaction(id, newTransaction);
-  await db.EndConn();
 
   if (!operationResult.HasSuccess())
   {
