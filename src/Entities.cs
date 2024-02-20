@@ -1,18 +1,33 @@
+public class NewTransacaoRequest
+{
+  public int? Valor { get; set; }
+  public string? Descricao { get; set; }
+  public string? Tipo { get; set; }
+  public bool IsValid()
+  {
+    var valueOk = Valor >= 0;
+    var descriptionOk = !string.IsNullOrEmpty(Descricao) && Descricao.Length >= 1 && Descricao.Length <= 10;
+    var typeOk = !string.IsNullOrEmpty(Tipo) && Tipo == "c" || Tipo == "d";
+
+    return valueOk && descriptionOk & typeOk;
+  }
+}
+
 public class Transacao
 {
   public Cliente? Client { get; set; }
 
-  public int Valor { get; set; }
-  public required string Descricao { get; set; }
-  public required string Tipo { get; set; }
+  public int? Valor { get; set; }
+  public string? Descricao { get; set; }
+  public string? Tipo { get; set; }
 
   public DateTime RealizadaEm { get; set; }
 
   public bool IsValid()
   {
     var valueOk = Valor >= 0;
-    var descriptionOk = Descricao.Length >= 1 && Descricao.Length <= 10;
-    var typeOk = Tipo == "c" || Tipo == "d";
+    var descriptionOk = !string.IsNullOrEmpty(Descricao) && Descricao.Length >= 1 && Descricao.Length <= 10;
+    var typeOk = !string.IsNullOrEmpty(Tipo) && Tipo == "c" || Tipo == "d";
 
     return valueOk && descriptionOk & typeOk;
   }
@@ -29,10 +44,10 @@ public class Transacao
   {
     if (Tipo == "c")
     {
-      Client!.Saldo += Valor;
+      Client!.Saldo += Valor ?? 0;
       return;
     }
-    Client!.Saldo -= Valor;
+    Client!.Saldo -= Valor ?? 0;
   }
 
 }
@@ -40,7 +55,6 @@ public class Transacao
 public class Cliente
 {
   public int Id { get; set; }
-  public required string Nome { get; set; }
   public int Saldo { get; set; }
   public int Limite { get; set; }
 

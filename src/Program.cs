@@ -8,42 +8,56 @@ if (dbHost == null)
   dbHost = "localhost";
 }
 
-string connectionString = $"Host=db;Port=5432;Username=postgres;Password=postgres;Database=rinhadb;Command Timeout=1";
+string connectionString = $"Host={dbHost};Port=5432;Username=postgres;Password=postgres;Database=rinhadb;Pooling=true;Minimum Pool Size=20;Maximum Pool Size=2000;Enlist=false;";
 builder.Services.AddNpgsqlDataSource(connectionString);
-builder.Services.AddSingleton<Database>(new Database(connectionString));
+builder.Services.AddScoped<Database>();
 
 var app = builder.Build();
 
 app.MapGet("/clientes/{id}/extrato", async (Database db, int id) =>
 {
-  var estatements = await db.GetEstatement(id);
-  if (estatements == null)
+  await using (db._conn)
   {
-    return Results.NotFound();
+    await db._conn.OpenAsync();
+    var estatements = await db.GetEstatement(id);
+    if (estatements == null)
+    {
+      return Results.NotFound();
+    }
+    return Results.Ok(estatements);
   }
-  return Results.Ok(estatements);
 });
 
-app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, Transacao newTransaction) =>
+app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, NewTransacaoRequest newTransaction) =>
 {
+
   if (!newTransaction.IsValid())
   {
     return Results.UnprocessableEntity();
   }
 
-  var exists = await db.ClientExists(id);
-  if (!exists)
+  await using (db._conn)
   {
-    return Results.NotFound();
-  }
-  var operationResult = await db.ProcessTransaction(id, newTransaction);
+    await db._conn.OpenAsync();
+    var t = new Transacao
+    {
+      Valor = newTransaction.Valor,
+      Descricao = newTransaction.Descricao,
+      Tipo = newTransaction.Tipo
+    };
+    var operationResult = await db.ProcessTransaction(id, t);
+    if (operationResult.ClientDoesNotExists)
+    {
+      return Results.NotFound();
+    }
 
-  if (!operationResult.HasSuccess())
-  {
-    return Results.UnprocessableEntity();
-  }
+    if (!operationResult.Sucesso)
+    {
+      return Results.UnprocessableEntity();
+    }
 
-  return Results.Ok(operationResult);
+    return Results.Ok(operationResult);
+  }
 });
 
 
