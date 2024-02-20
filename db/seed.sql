@@ -1,11 +1,11 @@
-CREATE TABLE IF NOT EXISTS customers (
+CREATE UNLOGGED TABLE IF NOT EXISTS customers (
     id serial PRIMARY KEY,
     name varchar(50) NOT NULL,
     balance integer NOT NULL DEFAULT 0,
     account_limit integer NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE UNLOGGED TABLE  IF NOT EXISTS transactions (
   id serial PRIMARY KEY,
   value integer NOT NULL,
   description varchar(11) NOT NULL, 
