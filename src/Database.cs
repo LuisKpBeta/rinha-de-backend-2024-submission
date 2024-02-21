@@ -89,20 +89,16 @@ public class Database
 
   public async Task<TransactionResult> ProcessTransaction(int clientId, Transacao newTransaction)
   {
-    // var command = new NpgsqlCommand("select pg_advisory_lock(@id)", _conn);
-    // command.Parameters.AddWithValue("@id", clientId);
-    // await command.ExecuteScalarAsync();
-    await using var t = await _conn.BeginTransactionAsync();
+
+    // await using var t = await _conn.BeginTransactionAsync();
     var newT = new TransactionResult();
     try
     {
-
       var client = await GetClientById(clientId)!;
-      if (client == null)
-      {
-        newT.ClientDoesNotExists = true;
-        return newT;
-      }
+      var command = new NpgsqlCommand("select pg_advisory_lock(id) FROM customers WHERE id = @id", _conn);
+      command.Parameters.AddWithValue("@id", clientId);
+      await command.ExecuteScalarAsync();
+
       newTransaction.Client = client;
       var saldoOk = newTransaction.CanBeMade();
       if (!saldoOk)
@@ -111,24 +107,31 @@ public class Database
         return newT;
       }
       newTransaction.DoOperation();
-      await UpdateClient(newTransaction.Client);
+      await UpdateClient(newTransaction.Client!);
+
+
+      command = new NpgsqlCommand("select pg_advisory_unlock(id) FROM customers WHERE id = @id", _conn);
+      command.Parameters.AddWithValue("@id", clientId);
+      await command.ExecuteScalarAsync();
+
       await InsertTransaction(newTransaction);
 
-      // command = new NpgsqlCommand("select pg_advisory_unlock(@id)", _conn);
-      // command.Parameters.AddWithValue("@id", clientId);
-      // await command.ExecuteScalarAsync();
 
-      await t.CommitAsync();
-      newT.Limite = newTransaction.Client.Limite;
+      newT.Limite = newTransaction.Client!.Limite;
       newT.Saldo = newTransaction.Client.Saldo;
       return newT;
     }
     catch (Exception er)
     {
       Console.WriteLine(er);
-      await t.RollbackAsync();
+      // await t.RollbackAsync();
       newT.Sucesso = false;
       return newT;
     }
+  }
+
+  public bool ClientExists(int id)
+  {
+    return id >= 1 && id <= 5;
   }
 }

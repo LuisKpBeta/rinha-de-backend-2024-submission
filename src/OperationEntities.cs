@@ -7,9 +7,6 @@ public class TransactionResult
 
   [JsonIgnore]
   public bool Sucesso { get; set; } = true;
-
-  [JsonIgnore]
-  public bool ClientDoesNotExists { get; set; } = false;
 }
 
 public class Estatement

@@ -1,11 +1,17 @@
 public class NewTransacaoRequest
 {
-  public int? Valor { get; set; }
+  public double? Valor { get; set; }
+  public int IntValor { get; set; }
   public string? Descricao { get; set; }
   public string? Tipo { get; set; }
   public bool IsValid()
   {
-    var valueOk = Valor >= 0;
+    if ((int)Valor! != Valor!)
+    {
+      return false;
+    }
+    IntValor = (int)Valor;
+    var valueOk = IntValor >= 0;
     var descriptionOk = !string.IsNullOrEmpty(Descricao) && Descricao.Length >= 1 && Descricao.Length <= 10;
     var typeOk = !string.IsNullOrEmpty(Tipo) && Tipo == "c" || Tipo == "d";
 
