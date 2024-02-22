@@ -29,36 +29,44 @@ public class Database
 
   public async Task<Estatement?> GetEstatement(int clientId)
   {
-    var client = await GetClientById(clientId);
-    if (client == null)
-    {
-      return null;
-    }
+
+    //select balance as value, account_limit, 'type' as type, 'account_limit' as description, now() as operation_date from customers where id = 1) union all (select value, 0 as account_limit, type, description, operation_date from transactions where customer_id = 1 limit 10);
     List<ReadTransactions> transactions = new List<ReadTransactions>();
     using var command = _conn.CreateCommand();
-    command.CommandText = "SELECT value, description, type, operation_date FROM transactions WHERE customer_id = @id ORDER BY operation_date DESC LIMIT 10";
+    // command.CommandText = "SELECT value, description, type, operation_date FROM transactions WHERE customer_id = @id ORDER BY operation_date DESC LIMIT 10";
+    command.CommandText = @"(select balance as value, account_limit, 'type' as type, 'account_limit' as description, now() as operation_date from customers
+                              where id = 1) 
+                              union all 
+                              (select value, 0 as account_limit, type, description, operation_date from transactions where customer_id = 1 limit 10);";
+
     command.Parameters.AddWithValue("id", clientId);
     await command.PrepareAsync();
     using var reader = await command.ExecuteReaderAsync();
-    while (reader.Read())
+    await reader.ReadAsync();
+    int saldo = reader.GetInt32(0);
+    int limite = reader.GetInt32(1);
+    var dataExtrato = reader.GetDateTime(4);
+    while (await reader.ReadAsync())
     {
       int value = reader.GetInt32(0);
-      string description = reader.GetString(1);
+      string description = reader.GetString(3);
       string type = reader.GetString(2);
-      DateTime date = reader.GetDateTime(3);
+      DateTime date = reader.GetDateTime(4);
 
       transactions.Add(new ReadTransactions { Descricao = description, Tipo = type, Valor = value, RealizadaEm = date });
     }
 
-    var saldo = new ClientBalance
+    var saldoC = new ClientBalance
     {
-      Limite = client.Limite,
-      Total = client.Saldo,
+      Limite = saldo,
+      Total = limite,
+      DataExtrato = dataExtrato
     };
     var estatements = new Estatement
     {
-      Saldo = saldo,
-      UltimasTransacoes = transactions
+      Saldo = saldoC,
+      UltimasTransacoes = transactions,
+
     };
     return estatements;
   }

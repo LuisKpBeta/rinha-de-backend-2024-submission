@@ -19,7 +19,7 @@ public class ClientBalance
 {
   public int Total { get; set; }
   public int Limite { get; set; }
-  public DateTime DataExtrato { get; } = DateTime.Now;
+  public DateTime DataExtrato { get; set; } = DateTime.Now;
 }
 public class ReadTransactions
 {
