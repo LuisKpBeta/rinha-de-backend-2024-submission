@@ -6,8 +6,8 @@ POST http://localhost:{{port}}/clientes/{{idCliente}}/transacoes
 Content-Type: application/json
 
 {
-  "valor": 1000,
-  "tipo" : "c",
+  "valor": 1,
+  "tipo" : "d",
   "descricao" : "descricaon"
 }
 ####
@@ -15,7 +15,7 @@ POST http://localhost:{{port}}/clientes/{{idCliente}}/transacoes
 Content-Type: application/json
 
 {
-  "valor": 2000,
+  "valor": 1.2,
   "tipo" : "c",
   "descricao" : "descricao"
 }

@@ -6,5 +6,8 @@ reload:
 	docker-compose down
 	make build
 
+run:
+	dotnet run --project=src/rinha-backend-2024-q1.csproj
+
 reset-db:
 	docker exec -it rinha-backend-2024-q1_db_1 psql -h localhost -U postgres -d rinhadb -c "UPDATE customers SET balance=0; TRUNCATE transactions;"
