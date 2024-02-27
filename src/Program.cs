@@ -1,7 +1,10 @@
-using Npgsql;
-using NpgsqlTypes;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+  options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+});
 string dbHost = Environment.GetEnvironmentVariable("DATABASE_HOST")!;
 if (dbHost == null)
 {
@@ -42,13 +45,13 @@ app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, NewTransaca
 
   await using (db._conn)
   {
-    await db._conn.OpenAsync();
     var t = new Transacao
     {
       Valor = newTransaction.IntValor,
       Descricao = newTransaction.Descricao,
       Tipo = newTransaction.Tipo
     };
+    await db._conn.OpenAsync();
     var operationResult = await db.ProcessTransaction(id, t);
 
     if (!operationResult.Sucesso)

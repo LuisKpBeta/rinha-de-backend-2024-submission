@@ -35,9 +35,9 @@ public class Database
     using var command = _conn.CreateCommand();
     // command.CommandText = "SELECT value, description, type, operation_date FROM transactions WHERE customer_id = @id ORDER BY operation_date DESC LIMIT 10";
     command.CommandText = @"(select balance as value, account_limit, 'type' as type, 'account_limit' as description, now() as operation_date from customers
-                              where id = 1) 
+                              where id = @id) 
                               union all 
-                              (select value, 0 as account_limit, type, description, operation_date from transactions where customer_id = 1 limit 10);";
+                              (select value, 0 as account_limit, type, description, operation_date from transactions where customer_id = @id order by operation_date desc limit 10);";
 
     command.Parameters.AddWithValue("id", clientId);
     await command.PrepareAsync();
@@ -58,8 +58,8 @@ public class Database
 
     var saldoC = new ClientBalance
     {
-      Limite = saldo,
-      Total = limite,
+      Limite = limite,
+      Total = saldo,
       DataExtrato = dataExtrato
     };
     var estatements = new Estatement
@@ -96,7 +96,6 @@ public class Database
     {
       int saldo = reader.GetInt32(0);
       int limit = reader.GetInt32(1);
-      // bool success = reader.GetBoolean(2);
       return (true, saldo, limit);
     }
     return (false, 0, 0);
@@ -105,36 +104,21 @@ public class Database
   public async Task<TransactionResult> ProcessTransaction(int clientId, Transacao newTransaction)
   {
 
-    await using var t = await _conn.BeginTransactionAsync();
     var newT = new TransactionResult();
 
     var valor = newTransaction.GetValue();
 
-    var command = new NpgsqlCommand("select pg_advisory_lock(id) FROM customers WHERE id = @id", _conn);
-    command.Parameters.AddWithValue("@id", clientId);
-    await command.ExecuteScalarAsync();
-
-    // newTransaction.Client = client;
-
     var (ok, saldo, limit) = await UpdateClient(clientId, valor);
 
-    command = new NpgsqlCommand("select pg_advisory_unlock(id) FROM customers WHERE id = @id", _conn);
-    command.Parameters.AddWithValue("@id", clientId);
-    await command.ExecuteScalarAsync();
     if (!ok)
     {
       newT.Sucesso = false;
-      await t.RollbackAsync();
       return newT;
     }
-
-    var lockTransaction = new NpgsqlCommand("LOCK TABLE transactions IN EXCLUSIVE MODE", _conn);
-    await lockTransaction.ExecuteScalarAsync();
     await InsertTransaction(newTransaction, clientId);
-    await t.CommitAsync();
 
-    newT.Limite = saldo;
-    newT.Saldo = limit;
+    newT.Limite = limit;
+    newT.Saldo = saldo;
     return newT;
   }
 
