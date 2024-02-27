@@ -27,6 +27,7 @@ app.MapGet("/clientes/{id}/extrato", async (Database db, int id) =>
     }
     await db._conn.OpenAsync();
     var estatements = await db.GetEstatement(id);
+    await db._conn.CloseAsync();
     return Results.Ok(estatements);
   }
 });
@@ -52,9 +53,9 @@ app.MapPost("/clientes/{id}/transacoes", async (Database db, int id, NewTransaca
       Tipo = newTransaction.Tipo
     };
     await db._conn.OpenAsync();
-    var operationResult = await db.ProcessTransaction(id, t);
-
-    if (!operationResult.Sucesso)
+    var (operationResult, hasSuccess) = await db.ProcessTransaction(id, t);
+    await db._conn.CloseAsync();
+    if (!hasSuccess)
     {
       return Results.UnprocessableEntity();
     }

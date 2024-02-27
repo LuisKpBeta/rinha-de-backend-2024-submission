@@ -70,7 +70,7 @@ public class Database
     };
     return estatements;
   }
-  public async Task<bool> InsertTransaction(Transacao newTransaction, int clientId, NpgsqlTransaction? t = null)
+  public async Task<bool> InsertTransaction(Transacao newTransaction, int clientId)
   {
     using var command = _conn.CreateCommand();
     command.CommandText = "INSERT INTO transactions (value, description, type, customer_id, operation_date) VALUES (@value, @description,@type, @customer_id, @date)";
@@ -101,7 +101,7 @@ public class Database
     return (false, 0, 0);
   }
 
-  public async Task<TransactionResult> ProcessTransaction(int clientId, Transacao newTransaction)
+  public async Task<(TransactionResult, bool)> ProcessTransaction(int clientId, Transacao newTransaction)
   {
 
     var newT = new TransactionResult();
@@ -112,14 +112,13 @@ public class Database
 
     if (!ok)
     {
-      newT.Sucesso = false;
-      return newT;
+      return (newT, false);
     }
     await InsertTransaction(newTransaction, clientId);
 
     newT.Limite = limit;
     newT.Saldo = saldo;
-    return newT;
+    return (newT, true);
   }
 
   public bool ClientExists(int id)
