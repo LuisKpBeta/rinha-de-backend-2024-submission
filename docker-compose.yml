@@ -38,7 +38,7 @@ services:
           memory: '50MB'
 
   api01: &api
-    image: rinha-api-2024:latest
+    image: luiscarlosb3/rinha-api-2024:1.0
     hostname: api01
     environment:
       - DATABASE_HOST=db
