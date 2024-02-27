@@ -1,6 +1,5 @@
 CREATE UNLOGGED TABLE IF NOT EXISTS customers (
     id serial PRIMARY KEY,
-    name varchar(50) NOT NULL,
     balance integer NOT NULL DEFAULT 0,
     account_limit integer NOT NULL DEFAULT 0
 );
@@ -17,12 +16,12 @@ CREATE UNLOGGED TABLE  IF NOT EXISTS transactions (
 
 DO $$
 BEGIN
-  INSERT INTO customers (name, account_limit)
+  INSERT INTO customers (account_limit)
   VALUES
-    ('first', 1000 * 100),
-    ('second', 800 * 100),
-    ('third', 10000 * 100),
-    ('fourth', 100000 * 100),
-    ('fifth', 5000 * 100);
+    (1000 * 100),
+    (800 * 100),
+    (10000 * 100),
+    (100000 * 100),
+    (5000 * 100);
 END; $$
 
